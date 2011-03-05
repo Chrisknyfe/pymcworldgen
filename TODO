@@ -1,0 +1,62 @@
+pyMCWorldGen Todo list:
+========
+Constants:
+    Create a "constants.py" for things like chunk dimensions and block ID's. Fix layer.py with the constants
+    CHUNKXLEN = 16
+    CHUNKZLEN = 16
+    CHUNKHEIGHT = 128
+    REGIONWIDTHINCHUNKS = 32
+    TRANSPARENT_BLOCK = -1
+
+Layers:
+    LayerMask: rename to LayerMask2D (along with all 2D LayerMask filters.
+    DSLayer: 
+        allow override values for ANY block coordinate (somehow do this using a "pull from input" design just like other paths)
+        cache chunk heights, we're going to need them when other filters request them.
+        rename this to DSLayer2d
+        move block height rendering code to a filter instead.
+    DSLayer3d: make it (dependent on diamondsquare3D)
+    LandmarkLayer: 
+        make it. It places random objects on the map. It should be maskable (probability mask.)
+        inputs: terrain heightmap, probability mask
+        outputs: block data to overlay
+
+Filters:
+    Add layer masking to all filters that can be masked.
+    CacheFilter and CacheMaskFilter: 
+        make them. They read the initial input only once and cache it for later retrieval. 
+        This will help with complex graphs.
+    TranslateFilter: make it. It translates a layer by a certain number of blocks (in the x, z AND y direction.) 
+    ArithmeticMaskFilter: make it. It scales and shifts all elements of a LayerMask2d ( Mask * Scale + Shift ), or perhaps blends two mask filters.....
+    BlockOverwriteFilter: 
+        make it. 
+        it blends two chunks together either based on either an "air block" ID or a LayerMask3d (pending.)
+        inputs: base chunk, overwrite chunk, air block (air blocks in overwrite chunk won't replace blocks in the base chunk.)
+
+Operator Overloading:
+    Layers should be able to operator overload and return an arithmetic filter of some kind... right? Hmm, not block data.
+    LayerMasks should have operator overloading, but not Layers.
+    Ask togos if you can blatantly steal some of his ideas (ridge function etc.)
+
+LandmarkGenerators:
+    LandmarkGenerator: make it.
+
+Graphs:
+    Make them. these are aggregate layers which generate entire map chunks. Basically a layer, but given a fancy name and contains a 
+    fuckton of filters.
+
+Diamondsquare:
+    diamondsquare3D: make it.
+    
+========
+Advantages of having a pipeline design: 
+    I don't have to carefully build each chunk in a huge for loop
+    Multiple outputs and inputs to the design
+    Easy x,z shifting (all I have to do is grab the four relevant chunks and build the data for a single chunk - possibly with caching.)  
+Disadvantages:
+    Not quite as scriptable, might be harder to get used to (unless I manage to structure the filter creation like Togos' script language.) 
+    Need filters for arithmetic operations, which could just be done with +-*/ if they were functions with array return values UNLESS I do operator overloading and return an arithmetic filter.
+    Cyclic filtering ( which I can prevent if I make sure to only set the input in the constructor. )
+
+
+

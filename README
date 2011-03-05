@@ -1,3 +1,34 @@
-Initial commit: please stand by.
+Chrisknyfe's pyMCWorldGen
+Alpha 1
+========
 
--Chrisknyfe
+This package is a pipelined minecraft world generator written in Python. Right now its really, REALLY messy. This is a pre-release to help stir up discussion with other modders who have made terrain generators before or are currently developing terrain generation mods.
+
+Installation:
+========
+
+This mod depends on:
+    Python 2.6: http://www.python.org/download/releases/2.6.6/ 
+    numpy: http://numpy.scipy.org/
+    pymclevel: https://github.com/codewarrior0/pymclevel
+    pylab/scipy: http://www.scipy.org/PyLab (for saving graphs of heightmap data)
+    c10t: http://www.minecraftforum.net/viewtopic.php?f=25&t=33803 (for taking a quick snapshot of the world)
+
+    just drop the c10t and pymclevel folders in the same folder as mcworldgen.py
+
+Usage:
+========
+    Standalone Map Generation:
+    python mcworldgen.py
+
+    Test map will be saved to ./renders
+
+    It just generates a random 16 x 16 map as 'testmap' and creates a c10t rendering of the map (given that c10t exists.)
+
+License:
+========
+    Free as in free speech, AND as in free beer! I provide this to all yalls, free of charge, just as long as you credit me if you use this source in other places.
+
+Thanks,
+CK
+
