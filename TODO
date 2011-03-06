@@ -1,12 +1,5 @@
 pyMCWorldGen Todo list:
 ========
-Constants:
-    Create a "constants.py" for things like chunk dimensions and block ID's. Fix layer.py with the constants
-    CHUNKXLEN = 16
-    CHUNKZLEN = 16
-    CHUNKHEIGHT = 128
-    REGIONWIDTHINCHUNKS = 32
-    TRANSPARENT_BLOCK = -1
 
 Layers:
     LayerMask: rename to LayerMask2D (along with all 2D LayerMask filters.
@@ -47,6 +40,9 @@ Graphs:
 
 Diamondsquare:
     diamondsquare3D: make it.
+
+Testing:
+    Write unit tests for individual filters that make more sense. Write each test in order of precedence, beginning with tests that are isolated from other components.
     
 ========
 Advantages of having a pipeline design: 

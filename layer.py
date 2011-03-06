@@ -8,15 +8,17 @@ Generator for map-relevant datasets: layers!
 
 import random
 import math
-from diamondsquare import *
 import numpy
+
+from diamondsquare import * # generates plasma noise
+from constants import * # stores such cool constants as CHUNK_WIDTH_IN_BLOCKS and MAT_AIR
 
 class Layer(object):
     """
     Implements a layer of chunk blocks 
     """
     def getChunk(self, coord):
-        return numpy.zeros( [16,16,128] )
+        return numpy.zeros( [CHUNK_WIDTH_IN_BLOCKS, CHUNK_WIDTH_IN_BLOCKS, CHUNK_HEIGHT_IN_BLOCKS] )
 
 class Filter(Layer):
     """
@@ -45,14 +47,14 @@ class LayerMask2d(object):
     initialdata = None
     def __init__(self, initialdata = None):
         if initialdata is not None:
-            assert( len(initialdata) == 16)
-            assert(len(initialdata[0]) == 16)
+            assert( len(initialdata) == CHUNK_WIDTH_IN_BLOCKS)
+            assert(len(initialdata[0]) == CHUNK_WIDTH_IN_BLOCKS)
             self.initialdata = initialdata
 
     def getChunkHeights(self, cx, cz):
         if self.initialdata is not None: 
             return self.initialdata
-        return numpy.ones( [16,16] )
+        return numpy.ones( [CHUNK_WIDTH_IN_BLOCKS, CHUNK_WIDTH_IN_BLOCKS] )
 
 class MaskFilter2d(LayerMask2d):
     """
@@ -137,7 +139,7 @@ class HeightMaskRenderFilter(Layer):
     blockid = None
     rangebottom = None
     rangetop = None # 
-    def __init__(self, inputlayer, blockid = 1, rangebottom = 50, rangetop = 100 ):
+    def __init__(self, inputlayer, blockid = MAT_STONE, rangebottom = 50, rangetop = 100 ):
         assert ( issubclass(type(inputlayer), LayerMask2d ) )
         self.inputlayer = inputlayer
         self.blockid = blockid
@@ -148,11 +150,11 @@ class HeightMaskRenderFilter(Layer):
         # 2D array
         heights = self.inputlayer.getChunkHeights( cx,cz )
         # 3D array
-        blocks = numpy.zeros( [16,16,128] ) #numpy.array([ [ [ 0 for h in xrange(128) ] for col in xrange(16) ] for row in xrange(16) ])
+        blocks = numpy.zeros( [CHUNK_WIDTH_IN_BLOCKS,CHUNK_WIDTH_IN_BLOCKS,CHUNK_HEIGHT_IN_BLOCKS] ) 
 
         # Copy height information into 3D block array
-        for row in xrange(16):
-            for col in xrange(16):
+        for row in xrange(CHUNK_WIDTH_IN_BLOCKS):
+            for col in xrange(CHUNK_WIDTH_IN_BLOCKS):
                 # we limit the vertical range in which the heightmap lives.
                 blockheight = int( heights[row,col] * (self.rangetop - self.rangebottom) + self.rangebottom ) 
                 blocks[row,col,0:blockheight] = self.blockid
@@ -167,7 +169,7 @@ class WaterLevelFilter(Filter):
     rangetop = None
     findid = None
     replaceid = None
-    def __init__(self, inputlayer, rangebottom = 0, rangetop = 64, findid = 0, replaceid = 8):
+    def __init__(self, inputlayer, rangebottom = 0, rangetop = CHUNK_HEIGHT_IN_BLOCKS / 2, findid = MAT_AIR, replaceid = MAT_WATER):
         super(WaterLevelFilter, self).__init__(inputlayer)
         self.rangebottom = rangebottom
         self.rangetop = rangetop
@@ -191,7 +193,7 @@ class TopSoilFilter(Filter):
     replaceid = None
     thickness = None
     airid = None
-    def __init__(self, inputlayer, rangebottom = 0, rangetop = 127, findid = 1, replaceid = 3, thickness = 4, airid = 0):
+    def __init__(self, inputlayer, rangebottom = 0, rangetop = CHUNK_HEIGHT_IN_BLOCKS - 1, findid = MAT_STONE, replaceid = MAT_DIRT, thickness = 4, airid = MAT_AIR):
         super(TopSoilFilter, self).__init__(inputlayer)
         self.rangebottom = rangebottom
         self.rangetop = rangetop
@@ -216,7 +218,7 @@ class TopSoilFilter(Filter):
                         if self.thickness > 0: # replace blocks 
                             col[max(hix-self.thickness+1, 0):hix+1] = self.replaceid
                         elif self.thickness < 0: # cake over with blocks
-                            col[hix+1:min(hix-self.thickness+1,128)] = self.replaceid
+                            col[hix+1:min(hix-self.thickness+1,CHUNK_HEIGHT_IN_BLOCKS)] = self.replaceid
                     if element != self.airid: break # we search only through the air
 
         return chunk # put
@@ -230,7 +232,7 @@ class SnowCoverFilter(Filter):
     snowid = None
     thickness = None
     airid = None
-    def __init__(self, inputlayer, rangebottom = 0, rangetop = 127, snowid = 78, thickness = 1, airid = 0):
+    def __init__(self, inputlayer, rangebottom = 0, rangetop = CHUNK_HEIGHT_IN_BLOCKS - 1, snowid = MAT_SNOW, thickness = 1, airid = MAT_AIR):
         super(SnowCoverFilter, self).__init__(inputlayer)
         self.rangebottom = rangebottom
         self.rangetop = rangetop
@@ -314,17 +316,17 @@ class DSLayer2d(LayerMask2d):
         """
         Get the heightmap for a 16 block x 16 block chunk.        
         """
-        chunksouth = cx % 32
-        chunkwest = cz % 32
-        regionsouth = int(math.floor(cx / 32))
-        regionwest = int(math.floor(cz / 32))
+        chunksouth = cx % REGION_WIDTH_IN_CHUNKS
+        chunkwest = cz % REGION_WIDTH_IN_CHUNKS
+        regionsouth = int(math.floor(cx / REGION_WIDTH_IN_CHUNKS))
+        regionwest = int(math.floor(cz / REGION_WIDTH_IN_CHUNKS))
 
         # Get region chunk corners
         chunkcorners = self.getRegionChunkCornerHeights( (regionsouth, regionwest) )
 
         # Generate chunk data using desired chunk corners
         # using numpy array so we can do a 2D slice to output this array
-        arr = numpy.array([[-1.0 for col in xrange(17)] for row in xrange(17)])
+        arr = numpy.array([[-1.0 for col in xrange(CHUNK_WIDTH_IN_BLOCKS + 1)] for row in xrange(CHUNK_WIDTH_IN_BLOCKS + 1)])
 
         arr[0][0] = chunkcorners[chunksouth][chunkwest]
         arr[len(arr)-1][0] = chunkcorners[chunksouth + 1][chunkwest]
@@ -333,13 +335,13 @@ class DSLayer2d(LayerMask2d):
 
         # First, generate edges, in order to seam up chunks.
         diamondsquare1D(arr[0,:] ,seed = self.seed, volatility = self.chunkvolatility, initdepth = self.chunkinitdepth)
-        diamondsquare1D(arr[16,:] ,seed = self.seed, volatility = self.chunkvolatility, initdepth = self.chunkinitdepth)
+        diamondsquare1D(arr[CHUNK_WIDTH_IN_BLOCKS,:] ,seed = self.seed, volatility = self.chunkvolatility, initdepth = self.chunkinitdepth)
         diamondsquare1D(arr[:,0] ,seed = self.seed, volatility = self.chunkvolatility, initdepth = self.chunkinitdepth)
-        diamondsquare1D(arr[:,16] ,seed = self.seed, volatility = self.chunkvolatility, initdepth = self.chunkinitdepth)
+        diamondsquare1D(arr[:,CHUNK_WIDTH_IN_BLOCKS] ,seed = self.seed, volatility = self.chunkvolatility, initdepth = self.chunkinitdepth)
         # Then fill in the rest!
         diamondsquare2D(arr, seed = self.seed, volatility = self.chunkvolatility, initdepth = self.chunkinitdepth)
 
-        return arr[0:16,0:16] # we slice the first 16 values in each dimension to create an even chunk.
+        return arr[0:CHUNK_WIDTH_IN_BLOCKS,0:CHUNK_WIDTH_IN_BLOCKS] # we slice the first 16 values in each dimension to create an even chunk.
 
     
     def getRegionChunkCornerHeights(self, regioncoord):
@@ -354,7 +356,7 @@ class DSLayer2d(LayerMask2d):
             return self.regioncache[regioncoord]
 
         # Generate region chunk corners
-        arr = numpy.array([[-1.0 for col in xrange(33)] for row in xrange(33)])
+        arr = numpy.array([[-1.0 for col in xrange(REGION_WIDTH_IN_CHUNKS + 1)] for row in xrange(REGION_WIDTH_IN_CHUNKS + 1)])
         
         arr[0][0] = self.getregioncorner( (regionsouth,regionwest) )
         arr[len(arr)-1][0] = self.getregioncorner( (regionsouth + 1,regionwest) )
@@ -363,9 +365,9 @@ class DSLayer2d(LayerMask2d):
 
         # First, generate edges, in order to seam up chunks.
         diamondsquare1D(arr[0,:] ,seed = self.seed, volatility = self.regionvolatility)
-        diamondsquare1D(arr[32,:] ,seed = self.seed, volatility = self.regionvolatility)
+        diamondsquare1D(arr[REGION_WIDTH_IN_CHUNKS,:] ,seed = self.seed, volatility = self.regionvolatility)
         diamondsquare1D(arr[:,0] ,seed = self.seed, volatility = self.regionvolatility)
-        diamondsquare1D(arr[:,32] ,seed = self.seed, volatility = self.regionvolatility)
+        diamondsquare1D(arr[:,REGION_WIDTH_IN_CHUNKS] ,seed = self.seed, volatility = self.regionvolatility)
         # Then fill in the rest!
         diamondsquare2D(arr, seed = self.seed, volatility = self.regionvolatility)
 
