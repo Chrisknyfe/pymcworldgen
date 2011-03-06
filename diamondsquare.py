@@ -8,6 +8,8 @@ Diamond-square algorithm for creating fractal cloud maps in 2D and 3D.
 import random
 import math
 
+__all__ = ["diamondsquare1D", "diamondsquare2D"]
+
 """
 diamondsquare1D
 
@@ -20,6 +22,9 @@ diamondsquare1D
 """
 
 def diamondsquare1D( arr, seed = None, volatility = 0.5, initdepth = 0):
+
+    if not (0.0 <= volatility and volatility <= 1.0): raise Exception, 'volatility is out of bounds:' + str(volatility)
+    if not (0 <= initdepth): raise Exception, 'initdepth is out of bounds:' + str( initdepth)
 
     """
     recurse:
@@ -86,7 +91,10 @@ diamondsquare2D
 """
 
 def diamondsquare2D( arr, seed = None, volatility = 0.5, initdepth = 0):
-        
+       
+    if not (0.0 <= volatility and volatility <= 1.0): raise Exception, 'volatility is out of bounds:' + str(volatility)
+    if not (0 <= initdepth): raise Exception, 'initdepth is out of bounds:' + str( initdepth)
+
     """
     recurse:
  
@@ -114,31 +122,31 @@ def diamondsquare2D( arr, seed = None, volatility = 0.5, initdepth = 0):
         # Square Step: top
         if ( arr[top][centerix[1]] < 0.0 ):
             topavg = (arr[top][left] + arr[top][right]) / 2.0
-            arr[top][centerix[1]] = min( max( topavg + toprandadd, 0 ), 1 )
+            arr[top][centerix[1]] = min( max( topavg + toprandadd, 0.0 ), 1.0 )
             #print "filling top", (top, centerix[1]), "with", arr[top][centerix[1]], "given", arr[top][left], "and", arr[top][right]         
 
         # Square Step: bottom
         if ( arr[bottom][centerix[1]] < 0.0 ):
             bottomavg = (arr[bottom][left] + arr[bottom][right]) / 2.0
-            arr[bottom][centerix[1]] = min( max( bottomavg + bottomrandadd, 0 ), 1 )
+            arr[bottom][centerix[1]] = min( max( bottomavg + bottomrandadd, 0.0 ), 1.0 )
             #print "filling bottom", (bottom, centerix[1]), "with", arr[bottom][centerix[1]], "given", arr[bottom][left], "and", arr[bottom][right]    
 
         # Square Step: right
         if ( arr[centerix[0]][right] < 0.0 ):
             rightavg = (arr[top][right] + arr[bottom][right]) / 2.0
-            arr[centerix[0]][right] = min( max( rightavg + rightrandadd, 0 ), 1 )
+            arr[centerix[0]][right] = min( max( rightavg + rightrandadd, 0.0 ), 1.0 )
             #print "filling right", (centerix[0], right), "with", arr[centerix[0]][right], "given", arr[top][right], "and",arr[bottom][right]
 
         # Square Step: left
         if ( arr[centerix[0]][left] < 0.0 ):
             leftavg = (arr[top][left] + arr[bottom][left]) / 2.0
-            arr[centerix[0]][left] = min( max( leftavg + leftrandadd, 0 ), 1 )
+            arr[centerix[0]][left] = min( max( leftavg + leftrandadd, 0.0 ), 1.0 )
             #print "filling left", (centerix[0], left), "with", arr[centerix[0]][left], "given", arr[top][left], "and",arr[bottom][left]
 
         # Diamond step: center point (comes after     
         if ( arr[centerix[0]][centerix[1]] < 0.0 ):
             centeravg = ( arr[top][left] + arr[top][right] + arr[bottom][left] + arr[bottom][right] ) / 4.0
-            arr[centerix[0]][centerix[1]] = min( max( centeravg + centerrandadd, 0 ), 1 )
+            arr[centerix[0]][centerix[1]] = min( max( centeravg + centerrandadd, 0.0 ), 1.0 )
             
             #print "filling center", (centerix[0], centerix[1]), "with", arr[centerix[0]][centerix[1]], "given", arr[top][left], \
             #      arr[top][right], arr[bottom][left], "and", arr[bottom][right]            
@@ -154,6 +162,8 @@ def diamondsquare2D( arr, seed = None, volatility = 0.5, initdepth = 0):
             
         # Recursive step: bottom left
         recurse( centerix[0], bottom, centerix[1], left, depth + 1 )
+
+    
 
     #print arr
     random.seed(seed)

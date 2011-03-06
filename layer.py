@@ -13,6 +13,14 @@ import numpy
 from diamondsquare import * # generates plasma noise
 from constants import * # stores such cool constants as CHUNK_WIDTH_IN_BLOCKS and MAT_AIR
 
+__all__ = ["Layer", "Filter", "WaterLevelFilter", "TopSoilFilter", "SnowCoverFilter",
+            "LayerMask2d", "MaskFilter2d", "BlendMaskFilter2d", "ThresholdMaskFilter2d", "DSLayerMask2d", 
+            "HeightMaskRenderFilter"]
+
+#########################################################################
+# Layer and Filter: output chunk block ID data (a chunk-sized 3D array of integers)
+#########################################################################
+
 class Layer(object):
     """
     Implements a layer of chunk blocks 
@@ -38,128 +46,6 @@ class Filter(Layer):
         #print "passthru chunk", (cx, cz)
         return self.inputlayer.getChunk(cx, cz)
 
-class LayerMask2d(object):
-    """
-    A 2d layer mask of height values (between 0.0 and 1.0). Can double as a terrain heightmap.
-
-    You can seed this LayerMask2d with initial data, or just leave it blank.
-    """
-    initialdata = None
-    def __init__(self, initialdata = None):
-        if initialdata is not None:
-            assert( len(initialdata) == CHUNK_WIDTH_IN_BLOCKS)
-            assert(len(initialdata[0]) == CHUNK_WIDTH_IN_BLOCKS)
-            self.initialdata = initialdata
-
-    def getChunkHeights(self, cx, cz):
-        if self.initialdata is not None: 
-            return self.initialdata
-        return numpy.ones( [CHUNK_WIDTH_IN_BLOCKS, CHUNK_WIDTH_IN_BLOCKS] )
-
-class MaskFilter2d(LayerMask2d):
-    """
-    Implements a layer which draws data from its inputs and outputs a 2D LayerMask2d.
-
-    This superclass acts as a passthrough filter for LayerMask2ds.
-    """
-    inputlayer = None
-    def __init__(self, inputlayer):
-        assert ( issubclass(type(inputlayer), LayerMask2d ) )
-        self.inputlayer = inputlayer
-
-    def getChunkHeights(self, cx, cz):
-        """
-        Sample filter: act as a pass-through filter.
-        """
-        #print "passthru chunk", (cx, cz)
-        return self.inputlayer.getChunkHeights(cx, cz)
-
-class BlendMaskFilter2d(LayerMask2d):
-    """
-    Blends two input LayerMask2ds given either an alphamask or a blendscale.
-    
-    Blendscale slides the blending between the two layers. If blendscale is closer
-    to 0.0, firstlayer is more prominent. if 1.0, secondlayer is more prominent.
-    """
-    firstlayer = None
-    secondlayer = None
-    alphamask = None
-    blendscale = None
-    def __init__(self, firstlayer, secondlayer, alphamask = None, blendscale = 0.5):
-        assert ( issubclass(type(firstlayer), LayerMask2d ) )
-        assert ( issubclass(type(secondlayer), LayerMask2d ) )
-        if alphamask is not None:
-            assert ( issubclass(type(alphamask), LayerMask2d ) )
-        assert ( type(blendscale) == float and 0.0 <= blendscale <= 1.0 )
-        self.firstlayer = firstlayer
-        self.secondlayer = secondlayer
-        self.alphamask = alphamask
-        self.blendscale = blendscale
-
-    def getChunkHeights(self, cx, cz):
-        """
-        Blend two input LayerMask2ds given either an alphamask or a blendscale.
-        """
-        firstheights = self.firstlayer.getChunkHeights(cx, cz)
-        secondheights = self.secondlayer.getChunkHeights(cx, cz)
-        if self.alphamask is not None:
-            alphaheights = self.alphamask.getChunkHeights(cx, cz)
-            return firstheights * (1.0 - alphaheights) + secondheights * alphaheights
-        else:
-            return ( firstheights * (1.0 - self.blendscale) ) + ( secondheights * self.blendscale )
-
-class ThresholdMaskFilter2d(LayerMask2d):
-    """
-    Imposes a threshold on the incoming layermask2d.
-    """
-    inputlayer = None
-    thresholdbottom = None
-    thresholdtop = None
-    def __init__(self, inputlayer, thresholdbottom = 0.5, thresholdtop = 1.0):
-        assert ( issubclass(type(inputlayer), LayerMask2d ) )
-        self.inputlayer = inputlayer
-        self.thresholdbottom = thresholdbottom
-        self.thresholdtop = thresholdtop
-
-    def getChunkHeights(self, cx, cz):
-        """
-        Threshold the mask filter
-        """
-        heights = self.inputlayer.getChunkHeights(cx, cz)
-        thresher = ( self.thresholdbottom <= heights ) & ( heights <= self.thresholdtop ) # create an indexing array
-        heights[thresher] = 1.0
-        heights[thresher == False] = 0.0
-        return heights
-
-class HeightMaskRenderFilter(Layer):
-    """
-    Renders a LayerMask2d to block data as block heights. 
-    """
-    inputlayer = None
-    blockid = None
-    rangebottom = None
-    rangetop = None # 
-    def __init__(self, inputlayer, blockid = MAT_STONE, rangebottom = 50, rangetop = 100 ):
-        assert ( issubclass(type(inputlayer), LayerMask2d ) )
-        self.inputlayer = inputlayer
-        self.blockid = blockid
-        self.rangebottom = rangebottom
-        self.rangetop = rangetop
-
-    def getChunk(self, cx, cz):
-        # 2D array
-        heights = self.inputlayer.getChunkHeights( cx,cz )
-        # 3D array
-        blocks = numpy.zeros( [CHUNK_WIDTH_IN_BLOCKS,CHUNK_WIDTH_IN_BLOCKS,CHUNK_HEIGHT_IN_BLOCKS] ) 
-
-        # Copy height information into 3D block array
-        for row in xrange(CHUNK_WIDTH_IN_BLOCKS):
-            for col in xrange(CHUNK_WIDTH_IN_BLOCKS):
-                # we limit the vertical range in which the heightmap lives.
-                blockheight = int( heights[row,col] * (self.rangetop - self.rangebottom) + self.rangebottom ) 
-                blocks[row,col,0:blockheight] = self.blockid
-
-        return blocks
 
 class WaterLevelFilter(Filter):
     """
@@ -264,7 +150,104 @@ class SnowCoverFilter(Filter):
 
         return chunk
 
-class DSLayer2d(LayerMask2d):
+#########################################################################
+# LayersMask2d and MaskFilter2d: output chunk heightmap data (a chunk-sized 2d array of values from 0.0 to 1.0)
+#########################################################################
+
+class LayerMask2d(object):
+    """
+    A 2d layer mask of height values (between 0.0 and 1.0). Can double as a terrain heightmap.
+
+    You can seed this LayerMask2d with initial data, or just leave it blank.
+    """
+    initialdata = None
+    def __init__(self, initialdata = None):
+        if initialdata is not None:
+            assert( len(initialdata) == CHUNK_WIDTH_IN_BLOCKS)
+            assert(len(initialdata[0]) == CHUNK_WIDTH_IN_BLOCKS)
+            self.initialdata = initialdata
+
+    def getChunkHeights(self, cx, cz):
+        if self.initialdata is not None: 
+            return self.initialdata
+        return numpy.ones( [CHUNK_WIDTH_IN_BLOCKS, CHUNK_WIDTH_IN_BLOCKS] )
+
+class MaskFilter2d(LayerMask2d):
+    """
+    Implements a layer which draws data from its inputs and outputs a 2D LayerMask2d.
+
+    This superclass acts as a passthrough filter for LayerMask2ds.
+    """
+    inputlayer = None
+    def __init__(self, inputlayer):
+        assert ( issubclass(type(inputlayer), LayerMask2d ) )
+        self.inputlayer = inputlayer
+
+    def getChunkHeights(self, cx, cz):
+        """
+        Sample filter: act as a pass-through filter.
+        """
+        #print "passthru chunk", (cx, cz)
+        return self.inputlayer.getChunkHeights(cx, cz)
+
+class BlendMaskFilter2d(LayerMask2d):
+    """
+    Blends two input LayerMask2ds given either an alphamask or a blendscale.
+    
+    Blendscale slides the blending between the two layers. If blendscale is closer
+    to 0.0, firstlayer is more prominent. if 1.0, secondlayer is more prominent.
+    """
+    firstlayer = None
+    secondlayer = None
+    alphamask = None
+    blendscale = None
+    def __init__(self, firstlayer, secondlayer, alphamask = None, blendscale = 0.5):
+        assert ( issubclass(type(firstlayer), LayerMask2d ) )
+        assert ( issubclass(type(secondlayer), LayerMask2d ) )
+        if alphamask is not None:
+            assert ( issubclass(type(alphamask), LayerMask2d ) )
+        assert ( type(blendscale) == float and 0.0 <= blendscale <= 1.0 )
+        self.firstlayer = firstlayer
+        self.secondlayer = secondlayer
+        self.alphamask = alphamask
+        self.blendscale = blendscale
+
+    def getChunkHeights(self, cx, cz):
+        """
+        Blend two input LayerMask2ds given either an alphamask or a blendscale.
+        """
+        firstheights = self.firstlayer.getChunkHeights(cx, cz)
+        secondheights = self.secondlayer.getChunkHeights(cx, cz)
+        if self.alphamask is not None:
+            alphaheights = self.alphamask.getChunkHeights(cx, cz)
+            return firstheights * (1.0 - alphaheights) + secondheights * alphaheights
+        else:
+            return ( firstheights * (1.0 - self.blendscale) ) + ( secondheights * self.blendscale )
+
+class ThresholdMaskFilter2d(LayerMask2d):
+    """
+    Imposes a threshold on the incoming layermask2d.
+    """
+    inputlayer = None
+    thresholdbottom = None
+    thresholdtop = None
+    def __init__(self, inputlayer, thresholdbottom = 0.5, thresholdtop = 1.0):
+        assert ( issubclass(type(inputlayer), LayerMask2d ) )
+        self.inputlayer = inputlayer
+        self.thresholdbottom = thresholdbottom
+        self.thresholdtop = thresholdtop
+
+    def getChunkHeights(self, cx, cz):
+        """
+        Threshold the mask filter
+        """
+        heights = self.inputlayer.getChunkHeights(cx, cz)
+        thresher = ( self.thresholdbottom <= heights ) & ( heights <= self.thresholdtop ) # create an indexing array
+        heights[thresher] = 1.0
+        heights[thresher == False] = 0.0
+        return heights
+
+class DSLayerMask2d(LayerMask2d):
 
     """
     Two-dimensional diamond-square heightmap layer.
@@ -375,6 +358,41 @@ class DSLayer2d(LayerMask2d):
         self.regioncache[regioncoord] = arr
 
         return arr
+
+#########################################################################
+# Hybrid filters: convert one output type to another
+#########################################################################
+
+class HeightMaskRenderFilter(Layer):
+    """
+    Renders a LayerMask2d to block data as block heights. 
+    """
+    inputlayer = None
+    blockid = None
+    rangebottom = None
+    rangetop = None # 
+    def __init__(self, inputlayer, blockid = MAT_STONE, rangebottom = 50, rangetop = 100 ):
+        assert ( issubclass(type(inputlayer), LayerMask2d ) )
+        self.inputlayer = inputlayer
+        self.blockid = blockid
+        self.rangebottom = rangebottom
+        self.rangetop = rangetop
+
+    def getChunk(self, cx, cz):
+        # 2D array
+        heights = self.inputlayer.getChunkHeights( cx,cz )
+        # 3D array
+        blocks = numpy.zeros( [CHUNK_WIDTH_IN_BLOCKS,CHUNK_WIDTH_IN_BLOCKS,CHUNK_HEIGHT_IN_BLOCKS] ) 
+
+        # Copy height information into 3D block array
+        for row in xrange(CHUNK_WIDTH_IN_BLOCKS):
+            for col in xrange(CHUNK_WIDTH_IN_BLOCKS):
+                # we limit the vertical range in which the heightmap lives.
+                blockheight = int( heights[row,col] * (self.rangetop - self.rangebottom) + self.rangebottom ) 
+                blocks[row,col,0:blockheight] = self.blockid
+
+        return blocks
+
 
 
         

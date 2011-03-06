@@ -10,164 +10,14 @@ Unit testing for pymcworldgen
 import random
 import math
 import copy
-import time
-import os
-import subprocess
 import numpy
-import pymclevel as mcl
-from scipy import *
-from pylab import *
 
 # Modules to test
-from diamondsquare import *
 from layer import *
 from landmark import *
-
-# Convenient rm -rf python function
-# http://code.activestate.com/recipes/552732-remove-directories-recursively/
-def rm_rf(d):
-    for path in (os.path.join(d,f) for f in os.listdir(d)):
-        if os.path.isdir(path):
-            rm_rf(path)
-        else:
-            os.unlink(path)
-    os.rmdir(d)
+from saveutils import *
 
 
-def savechunkimage( chunk, name='randomchunk' ):
-    hold(False)
-    ct = numpy.transpose(chunk) # for some reason, imshow reverses the axes. It thinks this is column major.
-    imshow( ct, origin='lower', extent=[0,len(chunk),0,len(chunk[0])])
-    hold(True)
-    xlabel('x (positive is south)')
-    ylabel('z (positive is west)')
-    title(name)
-    savefig(os.path.join("renders", name))
-
-def createWorld(name):
-    worlddir = os.path.join( os.getcwd(), "renders", name )
-    if ( os.path.exists( worlddir ) ):
-        print "World exists, deleting..."
-        rm_rf(worlddir)
-    os.mkdir( worlddir )
-
-    world = mcl.MCInfdevOldLevel( worlddir, create = True);
-
-    world.generateLights();
-    world.setPlayerPosition( (0, 67, 0) ) # add 3 to make sure his head isn't in the ground.
-    world.setPlayerSpawnPosition( (0, 64, 0) )
-    world.saveInPlace()
-    return world
-
-def saveWorld(world):
-    # save the world to file...
-    world.saveInPlace()
-
-def renderWorld(worldname, filename):
-    # take a c10t snapshot!
-    subprocess.call(["./c10t/c10t", "-w", "./renders/" + worldname, "-o", "./renders/" + filename + ".png", "--oblique-angle" ])    
-
-def getWorldChunk(world, cx, cz):
-    if not world.containsChunk(cx, cz):
-        world.createChunk(cx, cz)
-    chunk = world.getChunk(cx, cz)
-    return numpy.array(chunk.Blocks)
-
-chunksBeforeNextSave = 256
-def setWorldChunk(world, arr, cx, cz):
-    global chunksBeforeNextSave
-    assert( len(arr) == 16 )
-    assert( len(arr[0]) == 16 )
-    assert( len(arr[0][0]) == 128 )
-
-    if not world.containsChunk(cx, cz):
-        world.createChunk(cx, cz)
-    chunk = world.getChunk(cx, cz)
-    chunk.Blocks[:] = arr
-    chunk.chunkChanged()    
-    # Periodically save the map.
-    chunksBeforeNextSave -= 1
-    if chunksBeforeNextSave <= 0:
-        chunksBeforeNextSave = 256
-        saveWorld(world)    
-
- 
-
-def ds_unittest():
-    print "Testing diamond square 2D on empty odd-sized array" 
-    m = [[-1 for col in xrange(5)] for row in xrange(5)];
-    #print m
-    diamondsquare2D( m, 1234 )
-    #print m
-    # test that all values were filled
-    for row in m:
-        for col in row:
-            assert( col >= 0 )
-    
-    print "Testing diamond square 2D on corner-initialized even-sized array" 
-    m = [[-1 for col in xrange(4)] for row in xrange(4)]; m[0][0] = 0.5; m[3][0] = 0.5; m[0][3] = 0.5; m[3][3] = 0.5
-    #print m
-    diamondsquare2D( m, 1234 )
-    #print m
-    # test that all values were filled
-    for row in m:
-        for col in row:
-            assert( col >= 0 )
-
-    print "Testing diamond square 1D on empty odd array"
-    a = [-1 for el in xrange(9)]
-    #print a
-    diamondsquare1D( a, 1234 )
-    #print a
-    # test that all values were filled
-    for el in a:
-        assert( el >= 0 )
-
-    print "Testing diamond square 1D on corner-filled even array"
-    a = [-1 for el in xrange(10)]; a[0] = 0.95; a[9] = 0.05
-    #print a
-    diamondsquare1D( a, 1234 )
-    #print a
-    # test that all values were filled
-    for el in a:
-        assert( el >= 0 )
-
-        
-
-def ds_2dplottest():
-    random.seed()
-
-    # Allocate the array
-    zsize = ( random.randint(20, 100), random.randint(20,100) )
-    z = [[-0.25 for col in xrange( zsize[0] )] for row in xrange( zsize[1] )]
-    print "size of 2d z is", (len(z), len(z[0]))
-
-    # Initialize corners
-    z[0][0] = z[len(z)-1][0] = z[0][len(z[0])-1] = z[len(z)-1][len(z[0])-1] = 0.5
-
-    # Generate entire terrain
-    diamondsquare2D(z)
-    savechunkimage(z, 'terrain full')
-
-
-def ds_1dplottest():
-    random.seed()
-
-    # Generate entire terrain
-    z = [-0.1 for row in xrange( random.randint(20,100) )]
-    z[0] = z[len(z)-1] = 0.5
-
-    diamondsquare1D(z, seed = random.randint(0, 65535) )
-
-    figure()
-    plot(range(len(z)), z)
-    xlabel('position along string')
-    ylabel('height')
-    title('Full Edge')
-    grid(True)
-    savefig(os.path.join("renders", 'fulledge') )
-    #show()
-    
 
 def lg_unittest():
 
@@ -177,7 +27,7 @@ def lg_unittest():
     dummylayer.getChunk( (0,0) )
 
     random.seed()
-    terrainheight = DSLayer2d(random.randint(0, 65535))
+    terrainheight = DSLayerMask2d(random.randint(0, 65535))
 
     # make sure we can generate good chunks
     print "\nTesting single chunk\n========"
@@ -255,7 +105,7 @@ def world_savetest():
     testworld = createWorld("world_savetest_testworld")
     random.seed()
     worldseed = random.randint(0, 65535)
-    terrainheight = DSLayer2d(worldseed, 
+    terrainheight = DSLayerMask2d(worldseed, 
                             chunkvolatility = 0.5, 
                             regionvolatility = 0.4, 
                             chunkinitdepth = 3 )
@@ -308,7 +158,7 @@ def filtertest():
     worldsizez = 16
     print "World seed is", worldseed
     
-    terrheightmask = DSLayer2d(worldseed,
+    terrheightmask = DSLayerMask2d(worldseed,
                             chunkvolatility = 0.25, 
                             regionvolatility = 0.8, 
                             chunkinitdepth = 1 ) # Terrain height generation
@@ -371,13 +221,13 @@ def blendfiltertest():
     worldsizez = 16
     print "World seed is", worldseed
     
-    terrheightmask = DSLayer2d(worldseed,
+    terrheightmask = DSLayerMask2d(worldseed,
                             chunkvolatility = 0.25, 
                             regionvolatility = 1.0, 
                             chunkinitdepth = 1 ) # Terrain height generation
 
 
-    terrheightmask2 = DSLayer2d(worldseed + 1234,
+    terrheightmask2 = DSLayerMask2d(worldseed + 1234,
                             chunkvolatility = 0.25, 
                             regionvolatility = 1.0, 
                             chunkinitdepth = 2 ) # Terrain height generation
@@ -395,9 +245,6 @@ def blendfiltertest():
 if __name__ == "__main__":
     if not os.path.isdir("renders"):
         os.mkdir("renders")
-    ds_unittest()
-    ds_2dplottest()
-    ds_1dplottest()
     lg_unittest()
     world_savetest()
     filtertest()

@@ -2,13 +2,11 @@ pyMCWorldGen Todo list:
 ========
 
 Layers:
-    LayerMask: rename to LayerMask2D (along with all 2D LayerMask filters.
-    DSLayer: 
+    DSLayerMask2d: 
         allow override values for ANY block coordinate (somehow do this using a "pull from input" design just like other paths)
         cache chunk heights, we're going to need them when other filters request them.
-        rename this to DSLayer2d
         move block height rendering code to a filter instead.
-    DSLayer3d: make it (dependent on diamondsquare3D)
+    DSLayerMask3d: make it (dependent on diamondsquare3D)
     LandmarkLayer: 
         make it. It places random objects on the map. It should be maskable (probability mask.)
         inputs: terrain heightmap, probability mask
@@ -25,6 +23,7 @@ Filters:
         make it. 
         it blends two chunks together either based on either an "air block" ID or a LayerMask3d (pending.)
         inputs: base chunk, overwrite chunk, air block (air blocks in overwrite chunk won't replace blocks in the base chunk.)
+    ProfilerFilter: make it. It profiles the amount of time the filter took to run either .getChunk() or .getChunkHeights(). Might have to be a hack...
 
 Operator Overloading:
     Layers should be able to operator overload and return an arithmetic filter of some kind... right? Hmm, not block data.
@@ -42,17 +41,7 @@ Diamondsquare:
     diamondsquare3D: make it.
 
 Testing:
+    Write unit tests for saveutils
     Write unit tests for individual filters that make more sense. Write each test in order of precedence, beginning with tests that are isolated from other components.
-    
-========
-Advantages of having a pipeline design: 
-    I don't have to carefully build each chunk in a huge for loop
-    Multiple outputs and inputs to the design
-    Easy x,z shifting (all I have to do is grab the four relevant chunks and build the data for a single chunk - possibly with caching.)  
-Disadvantages:
-    Not quite as scriptable, might be harder to get used to (unless I manage to structure the filter creation like Togos' script language.) 
-    Need filters for arithmetic operations, which could just be done with +-*/ if they were functions with array return values UNLESS I do operator overloading and return an arithmetic filter.
-    Cyclic filtering ( which I can prevent if I make sure to only set the input in the constructor. )
-
-
+    Copy the old unittests to integration tests
 

@@ -22,20 +22,20 @@ import pymclevel as mcl
 from diamondsquare import *
 from layer import *
 from landmark import *
+from saveutils import *
 
-# Test stuff so I don't have to write it twice
-from unittests import rm_rf, createWorld, getWorldChunk, setWorldChunk, saveWorld, renderWorld
+
+random.seed()
 
 def filtertest():
     testworld = createWorld("testworld")
-    random.seed()
     # cool seeds: 12397
     worldseed = random.randint(0, 65535)
     worldsizex = 16
     worldsizez = 16
     print "World seed is", worldseed
     
-    terrheightmask = DSLayer2d(worldseed,
+    terrheightmask = DSLayerMask2d(worldseed,
                             chunkvolatility = 0.25, 
                             regionvolatility = 0.8, 
                             chunkinitdepth = 1 ) # Terrain height generation
