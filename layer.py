@@ -25,7 +25,7 @@ class Layer(object):
     """
     Implements a layer of chunk blocks 
     """
-    def getChunk(self, coord):
+    def getChunk(self, cx, cz):
         return numpy.zeros( [CHUNK_WIDTH_IN_BLOCKS, CHUNK_WIDTH_IN_BLOCKS, CHUNK_HEIGHT_IN_BLOCKS] )
 
 class Filter(Layer):
@@ -49,7 +49,7 @@ class Filter(Layer):
 
 class WaterLevelFilter(Filter):
     """
-    A filter that does a find-replace of all blocks within a certain height range
+    A filter that does a find-replace of all blocks within a certain height range (endpoint inclusive)
     """
     rangebottom = None
     rangetop = None

@@ -24,7 +24,7 @@ def lg_unittest():
     dummylayer = Layer()
 
     
-    dummylayer.getChunk( (0,0) )
+    dummylayer.getChunk( 0,0 )
 
     random.seed()
     terrainheight = DSLayerMask2d(random.randint(0, 65535))

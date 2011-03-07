@@ -24,6 +24,7 @@ Filters:
         it blends two chunks together either based on either an "air block" ID or a LayerMask3d (pending.)
         inputs: base chunk, overwrite chunk, air block (air blocks in overwrite chunk won't replace blocks in the base chunk.)
     ProfilerFilter: make it. It profiles the amount of time the filter took to run either .getChunk() or .getChunkHeights(). Might have to be a hack...
+    VerificationFilter: make it. It makes sure that the filter output is compliant, then acts as a passthrough.
 
 Operator Overloading:
     Layers should be able to operator overload and return an arithmetic filter of some kind... right? Hmm, not block data.
@@ -31,7 +32,8 @@ Operator Overloading:
     Ask togos if you can blatantly steal some of his ideas (ridge function etc.)
 
 LandmarkGenerators:
-    LandmarkGenerator: make it.
+    StaticTreeLandmark: make it. It just builds a static template for a tree, then writes it to chunk at the desired height.
+    
 
 Graphs:
     Make them. these are aggregate layers which generate entire map chunks. Basically a layer, but given a fancy name and contains a 

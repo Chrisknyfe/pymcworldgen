@@ -72,13 +72,8 @@ def filtertest():
                             snowid = testworld.materials.Snow.ID) # Cake snow on top of exposed stone
         
     tfilter = WaterLevelFilter(tfilter) # water level at 64
-    #tfilter = Landmark(worldseed, tfilter, 255, 255) # a single landmark
-    #tfilter = Landmark(worldseed, tfilter, 0, 0) # a single landmark
-    #tfilter = Landmark(worldseed, tfilter, 0, 255) # a single landmark
-    #tfilter = Landmark(worldseed, tfilter, 255, 0) # a single landmark
-    #tfilter = Landmark(worldseed, tfilter, 128, 128) # a single landmark
-    #tfilter = Landmark(worldseed, tfilter, -20, -10) # a single landmark
-    #tfilter = Landmark(worldseed, tfilter, 300, 258) # a single landmark
+    tfilter = Landmark(worldseed, tfilter, 0, 0) # a single landmark
+    tfilter = LandmarkGenerator(worldseed, tfilter)
 
     # Generate minecraft level
     for chunkrow in xrange(worldsizex):
