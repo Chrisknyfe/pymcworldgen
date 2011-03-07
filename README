@@ -1,8 +1,13 @@
-Chrisknyfe's pyMCWorldGen
-Alpha 1
+Chrisknyfe's pyMCWorldGen 
+Alpha 2
 ========
 
-This package is a pipelined minecraft world generator written in Python. Right now its really, REALLY messy. This is a pre-release to help stir up discussion with other modders who have made terrain generators before or are currently developing terrain generation mods.
+This package is a pipelined minecraft world generator written in Python. This is a pre-release to help stir up discussion with other modders who have made terrain generators before or are currently developing terrain generation mods.
+
+What's new in Alpha 2:
+========
+- LandmarkGenerator class, for placing a large number of landmarks easily.
+- Beginning of the unit testing code, which means more bugs will get caught, sooner. You can run them yourself with 'runtests.py'
 
 Installation:
 ========
@@ -14,7 +19,7 @@ This mod depends on:
     pylab/scipy: http://www.scipy.org/PyLab (for saving graphs of heightmap data)
     c10t: http://www.minecraftforum.net/viewtopic.php?f=25&t=33803 (for taking a quick snapshot of the world)
 
-    just drop the c10t and pymclevel folders in the same folder as mcworldgen.py
+    you can download these dependencies manually, or use the script 'get-dependencies.sh' if you're a linux user (who uses aptitude.)
 
 Usage:
 ========
