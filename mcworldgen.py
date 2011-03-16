@@ -99,8 +99,7 @@ def filtertest():
 if __name__ == "__main__":
     if not os.path.isdir("renders"):
         os.mkdir("renders")
-    for i in xrange(10):
-        filtertest()
+    filtertest()
     print "Generation complete."
 
 
