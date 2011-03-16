@@ -14,6 +14,7 @@ Layers:
 
 Filters:
     Add layer masking to all filters that can be masked.
+     
     CacheFilter and CacheMaskFilter: 
         make them. They read the initial input only once and cache it for later retrieval. 
         This will help with complex graphs.
@@ -32,7 +33,15 @@ Operator Overloading:
     Ask togos if you can blatantly steal some of his ideas (ridge function etc.)
 
 LandmarkGenerators:
-    StaticTreeLandmark: make it. It just builds a static template for a tree, then writes it to chunk at the desired height.
+    Landmark:
+        Design a landmark-drawing API so users can get fresh with landmarks too:
+            Schematic loading API
+            Line-drawing API
+            Box API
+            Sphere-drawing API
+            Anything else we might need!
+    StaticTreeLandmark: 
+        finish the "actual-y" search by pulling from the correct chunk!
     
 
 Graphs:
@@ -46,4 +55,8 @@ Testing:
     Write unit tests for saveutils
     Write unit tests for individual filters that make more sense. Write each test in order of precedence, beginning with tests that are isolated from other components.
     Copy the old unittests to integration tests
+
+===========================================
+Ideas:
+    What if I made a normal "layer" the return value between filters? then I can give it ID and DATA buffers. That might be expensive to build a layer for every filter output like that. Maybe a dict with two values, "IDs" and "data"
 

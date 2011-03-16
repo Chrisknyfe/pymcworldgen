@@ -20,6 +20,8 @@ try:
     MAT_WATER = materials.WaterActive.ID
     MAT_SNOW = materials.Snow.ID
     MAT_BEDROCK = materials.Bedrock.ID
+    MAT_LEAVES = materials.Leaves.ID
+    MAT_GRASS = materials.Grass.ID
 except ImportError:
     MAT_AIR = 0
     MAT_STONE = 1
@@ -28,6 +30,8 @@ except ImportError:
     MAT_WATER = 8
     MAT_SNOW = 78
     MAT_BEDROCK = 7
+    MAT_LEAVES = 18
+    MAT_GRASS = 2
 MAT_TRANSPARENT = -1
 
 # LayerMask height constants

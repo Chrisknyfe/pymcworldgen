@@ -12,6 +12,9 @@ import numpy
 from layer import *
 from constants import *
 
+
+treesskipped = [0]
+
 class Landmark(Layer):
     """
     A chunk generator for a single landmark somewhere in the world.
@@ -25,7 +28,9 @@ class Landmark(Layer):
     
     # Viewrange is a class property only. This is the maximum number of blocks from
     # the centerpoint that this Landmark will generate blocks.
-    viewrange = 0
+    viewrange = 0    
+    drawcancelled = False
+
     def __init__(self, seed, terrainlayer, x = 0, z = 0, y = 0, layermask = None):
         """
         Landmark constructor. Random seed necessary. terrainlayer necessary.
@@ -39,6 +44,7 @@ class Landmark(Layer):
         self.z = z
         self.y = y
         self.layermask = layermask
+        self.drawcancelled = False
 
     def setpos(self, x, z, y):
         """
@@ -64,7 +70,11 @@ class Landmark(Layer):
             return False
 
     def editChunk(self, cornerblockx, cornerblockz, terrainchunk):
-        # Dummy: output a wood block at height 105.
+        """
+        Edit the input chunk. Override this function to create beautiful procedural
+        Landmarks. 
+        """
+        # Dummy: output a wood column
         # where in the array does this block belong?
         relx = self.x - cornerblockx
         relz = self.z - cornerblockz
@@ -75,16 +85,110 @@ class Landmark(Layer):
         
     def getChunk(self, cx, cz):
         """
-        Output a chunk for processing. 
+        Output a chunk for processing. Do not override! use editChunk instead
         """
+            
         # If we aren't in this chunk, either act as a passthru or return an opaque chunk.
-        if not self.isLandmarkInChunk(cx, cz):
+        if self.drawcancelled or (not self.isLandmarkInChunk(cx, cz)):
             return self.terrainlayer.getChunk(cx, cz)
         # If we are in the chunk, let's write our blocks to the output chunk
         terrainchunk = self.terrainlayer.getChunk(cx, cz)
         outputchunk = terrainchunk
         self.editChunk(cx*CHUNK_WIDTH_IN_BLOCKS, cz*CHUNK_WIDTH_IN_BLOCKS, terrainchunk)
         return outputchunk
+
+
+class StaticTreeLandmark(Landmark):
+
+    # 5x5x5 static tree array, indexed ( x,z,y ) for compatability
+    
+    statictree =    [
+                    [[MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_TRANSPARENT, MAT_TRANSPARENT],
+                    [MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_TRANSPARENT, MAT_TRANSPARENT],
+                    [MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_TRANSPARENT, MAT_TRANSPARENT],
+                    [MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_TRANSPARENT, MAT_TRANSPARENT],
+                    [MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_TRANSPARENT, MAT_TRANSPARENT]],
+
+                    [[MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_TRANSPARENT, MAT_TRANSPARENT],
+                    [MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_LEAVES, MAT_TRANSPARENT],
+                    [MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_LEAVES, MAT_LEAVES],
+                    [MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_LEAVES, MAT_TRANSPARENT],
+                    [MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_TRANSPARENT, MAT_TRANSPARENT]],
+
+                    [[MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_TRANSPARENT, MAT_TRANSPARENT],
+                    [MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_LEAVES, MAT_LEAVES],
+                    [MAT_WOOD, MAT_WOOD, MAT_WOOD, MAT_WOOD, MAT_WOOD, MAT_LEAVES],
+                    [MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_LEAVES, MAT_LEAVES],
+                    [MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_TRANSPARENT, MAT_TRANSPARENT]],
+
+                    [[MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_TRANSPARENT, MAT_TRANSPARENT],
+                    [MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_LEAVES, MAT_TRANSPARENT],
+                    [MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_LEAVES, MAT_LEAVES],
+                    [MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_LEAVES, MAT_TRANSPARENT],
+                    [MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_TRANSPARENT, MAT_TRANSPARENT]],
+
+                    [[MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_TRANSPARENT, MAT_TRANSPARENT],
+                    [MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_TRANSPARENT, MAT_TRANSPARENT],
+                    [MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_TRANSPARENT, MAT_TRANSPARENT],
+                    [MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_TRANSPARENT, MAT_TRANSPARENT],
+                    [MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_TRANSPARENT, MAT_LEAVES, MAT_TRANSPARENT, MAT_TRANSPARENT]]
+                    ]
+
+    viewrange = max( len(statictree), len(statictree[0]) ) / 2
+
+    """
+    """
+    def editChunk(self, cornerblockx, cornerblockz, terrainchunk):
+        """
+        Place the tree in this chunk!
+        """
+        global treesskipped
+
+        # Find our actual Y: place us on the ground. TODO: MAKE THIS A FUNCTION
+        # but before that, we need the correct chunk.
+        originchunk = terrainchunk
+        if not ( 0 <= (self.x - cornerblockx) < CHUNK_WIDTH_IN_BLOCKS and 0 <= (self.z - cornerblockz) < CHUNK_WIDTH_IN_BLOCKS ):
+            originchunkx = self.x / CHUNK_WIDTH_IN_BLOCKS
+            originchunkz = self.z / CHUNK_WIDTH_IN_BLOCKS
+            originchunk = self.terrainlayer.getChunk(originchunkx, originchunkz)
+        # now that we have the correct origin chunk, let's search for the tree's ground height.
+        downrange = range( 0, 127 )
+        downrange.reverse()
+        actualy = -1
+        actualyid = -1
+        for y in downrange:
+            #print "checking x,z,y:", self.x - cornerblockx, self.z - cornerblockz, y
+            actualyid = originchunk[self.x % CHUNK_WIDTH_IN_BLOCKS][self.z % CHUNK_WIDTH_IN_BLOCKS][y]
+            if actualyid != MAT_AIR:
+                actualy = y + 1
+                break
+
+        if actualy == -1: 
+            self.drawcancelled = True
+            treesskipped[0] += 1
+            return 
+        if actualyid != MAT_DIRT and actualyid != MAT_GRASS:
+            self.drawcancelled = True
+            treesskipped[0] += 1
+            return
+        
+        # Write the static array into the map. # TODO: MAKE THIS A FUNCTION
+        # offsets of lower north-east corner of the array relative to corner block.
+        offsetx = self.x - cornerblockx - self.viewrange
+        offsetz = self.z - cornerblockz - self.viewrange
+        offsety = actualy 
+        inputarray = self.statictree
+
+        # iterate between the overlapping range, in output-space.
+        for outx in xrange( max(0, offsetx), min(CHUNK_WIDTH_IN_BLOCKS, offsetx + len(inputarray) ) ):
+            # get the current coordinate in input-space.
+            inx = outx - offsetx
+            for outz in xrange( max(0, offsetz), min(CHUNK_WIDTH_IN_BLOCKS, offsetz + len(inputarray[inx]) ) ):
+                inz = outz - offsetz
+                for outy in xrange( max(0, offsety), min(CHUNK_HEIGHT_IN_BLOCKS, offsety + len(inputarray[inx][inz]) ) ):
+                    iny = outy - offsety
+                    if (inputarray[inx][inz][iny] != MAT_TRANSPARENT):
+                        terrainchunk[outx][outz][outy] = self.statictree[inx][inz][iny]
 
 class LandmarkGenerator(Layer):
     """
@@ -185,6 +289,6 @@ class LandmarkGenerator(Layer):
             # insert this landmark at the end of the graph    
             mark.setTerrainLayer( graph )
             graph = mark
-
+        
         return graph.getChunk( cx, cz )
         
