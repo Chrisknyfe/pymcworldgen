@@ -15,7 +15,8 @@ import copy
 import time
 import os
 import subprocess
-import numpy
+#import numpy
+import time
 import pymclevel as mcl
 
 # Modules to test
@@ -28,6 +29,9 @@ from saveutils import *
 random.seed()
 
 def filtertest():
+
+    totaltime = 0
+
     testworld = createWorld("testworld")
     # cool seeds: 12397
     worldseed = random.randint(0, 65535)
@@ -87,14 +91,19 @@ def filtertest():
     for chunkrow in xrange(-worldsizex, worldsizex):
         print "Generating westward chunk strip", chunkrow
         for chunkcol in xrange(-worldsizez, worldsizez):
-            #print "\n========\nChunk", (chunkrow, chunkcol), "\n========"        
+            #print "\n========\nChunk", (chunkrow, chunkcol), "\n========"   
+            
+            starttime = time.clock()     
             currchunk = tfilter.getChunk(chunkrow, chunkcol)
+            endtime = time.clock()
+            totaltime += endtime - starttime
             setWorldChunk( testworld, currchunk, chunkrow, chunkcol)
+    
     saveWorld(testworld)
     renderWorld("testworld", "testworld-"+str(worldseed)+"-"+str(worldsizex*2)+"x"+str(worldsizez*2))
     print "World seed is", worldseed
 
-
+    print "Processing took", totaltime, "seconds."
 
 if __name__ == "__main__":
     if not os.path.isdir("renders"):

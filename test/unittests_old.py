@@ -72,7 +72,14 @@ def lg_unittest():
         for regionwest in xrange(0, 4):
             print "Generating region", (regionsouth, regionwest)
             regionraw = terrainheight.getRegionChunkCornerHeights( (regionsouth , regionwest) )
-            currregion = regionraw[0:32,0:32] #slice off the last edges
+
+            #currregion = regionraw[0:32,0:32] #slice off the last edges
+            currregion = []
+            for row in xrange( len(regionraw) - 1 ):
+                currregion.append( regionraw[row][0:len(regionraw[0]) - 1] ) 
+
+            #print len(currregion), len(currregion[0])
+
             if westwardstrip == None:
                 westwardstrip = currregion
             else:
@@ -128,7 +135,7 @@ def world_savetest():
         westwardstrip = None
         print "Generating westward chunk strip", chunkrow
         for chunkcol in xrange(32):
-            print "Chunk", (chunkrow, chunkcol)
+            #print "Chunk", (chunkrow, chunkcol)
             # save to minecraft level            
             currchunk = tfilter.getChunk(chunkrow, chunkcol)
             setWorldChunk( testworld, currchunk, chunkrow, chunkcol)

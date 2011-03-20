@@ -15,6 +15,8 @@ import pymclevel as mcl
 from scipy import *
 from pylab import *
 
+from layer import Chunk
+
 __all__ = ["rm_rf", "saveedgeimage", "savechunkimage", "createWorld", "saveWorld", "renderWorld", "getWorldChunk", "setWorldChunk"]
 
 
@@ -77,8 +79,11 @@ def getWorldChunk(world, cx, cz):
     return numpy.array(chunk.Blocks)
 
 chunksBeforeNextSave = 256
-def setWorldChunk(world, arr, cx, cz):
+def setWorldChunk(world, inchunk, cx, cz):
     global chunksBeforeNextSave
+
+    assert( issubclass(inchunk.__class__, Chunk) )
+    arr = inchunk.blocks
     assert( len(arr) == 16 )
     assert( len(arr[0]) == 16 )
     assert( len(arr[0][0]) == 128 )

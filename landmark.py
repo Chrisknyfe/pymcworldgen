@@ -8,7 +8,7 @@ Landmark generation - interspersed landmarks on the terrain
 
 import random
 import math
-import numpy
+#import numpy
 from layer import *
 from constants import *
 
@@ -74,14 +74,16 @@ class Landmark(Layer):
         Edit the input chunk. Override this function to create beautiful procedural
         Landmarks. 
         """
+        terrainblocks = terrainchunk.blocks
         # Dummy: output a wood column
         # where in the array does this block belong?
         relx = self.x - cornerblockx
         relz = self.z - cornerblockz
         # only place this down if we're not going to overflow the array
         if ( 0 <= relx < CHUNK_WIDTH_IN_BLOCKS ) and ( 0 <= relz < CHUNK_WIDTH_IN_BLOCKS ):
-            terrainchunk[relx, relz, 0:CHUNK_HEIGHT_IN_BLOCKS] = MAT_WOOD
-            terrainchunk[relx, relz, self.y] = MAT_WATER
+            for i in xrange(CHUNK_HEIGHT_IN_BLOCKS):
+                terrainblocks[relx][relz][i] = MAT_WOOD
+            terrainblocks[relx][relz][self.y] = MAT_WATER
         
     def getChunk(self, cx, cz):
         """
@@ -144,20 +146,22 @@ class StaticTreeLandmark(Landmark):
         """
         global treesskipped
 
+        
+        terrainblocks = terrainchunk.blocks
+
         # Find our actual Y: place us on the ground. TODO: MAKE THIS A FUNCTION
         # but before that, we need the correct chunk.
-        originchunk = terrainchunk
+        originchunk = terrainblocks
         if not ( 0 <= (self.x - cornerblockx) < CHUNK_WIDTH_IN_BLOCKS and 0 <= (self.z - cornerblockz) < CHUNK_WIDTH_IN_BLOCKS ):
             originchunkx = self.x / CHUNK_WIDTH_IN_BLOCKS
             originchunkz = self.z / CHUNK_WIDTH_IN_BLOCKS
-            originchunk = self.terrainlayer.getChunk(originchunkx, originchunkz)
+            originchunk = self.terrainlayer.getChunk(originchunkx, originchunkz).blocks
         # now that we have the correct origin chunk, let's search for the tree's ground height.
         downrange = range( 0, 127 )
         downrange.reverse()
         actualy = -1
         actualyid = -1
         for y in downrange:
-            #print "checking x,z,y:", self.x - cornerblockx, self.z - cornerblockz, y
             actualyid = originchunk[self.x % CHUNK_WIDTH_IN_BLOCKS][self.z % CHUNK_WIDTH_IN_BLOCKS][y]
             if actualyid != MAT_AIR:
                 actualy = y + 1
@@ -188,7 +192,7 @@ class StaticTreeLandmark(Landmark):
                 for outy in xrange( max(0, offsety), min(CHUNK_HEIGHT_IN_BLOCKS, offsety + len(inputarray[inx][inz]) ) ):
                     iny = outy - offsety
                     if (inputarray[inx][inz][iny] != MAT_TRANSPARENT):
-                        terrainchunk[outx][outz][outy] = self.statictree[inx][inz][iny]
+                        terrainblocks[outx][outz][outy] = self.statictree[inx][inz][iny]
 
 class LandmarkGenerator(Layer):
     """
