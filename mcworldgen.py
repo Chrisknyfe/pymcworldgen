@@ -2,9 +2,9 @@
 
 """
 
-Standalone generator for mcworldgen
+mcworldgen.py
 
-basically mcworldgentest with scipy/pylab stripped out
+Standalone generator for mcworldgen: generates a default-ish minecraft map.
 
 """
 
