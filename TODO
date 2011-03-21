@@ -7,17 +7,12 @@ Layers:
         cache chunk heights, we're going to need them when other filters request them.
         move block height rendering code to a filter instead.
     DSLayerMask3d: make it (dependent on diamondsquare3D)
-    LandmarkLayer: 
-        make it. It places random objects on the map. It should be maskable (probability mask.)
-        inputs: terrain heightmap, probability mask
-        outputs: block data to overlay
 
 Filters:
     Add layer masking to all filters that can be masked.
      
-    CacheFilter and CacheMaskFilter: 
-        make them. They read the initial input only once and cache it for later retrieval. 
-        This will help with complex graphs.
+    CacheMaskFilter: 
+        make this. It reads the initial input only once and caches it for later retrieval. 
     TranslateFilter: make it. It translates a layer by a certain number of blocks (in the x, z AND y direction.) 
     ArithmeticMaskFilter: make it. It scales and shifts all elements of a LayerMask2d ( Mask * Scale + Shift ), or perhaps blends two mask filters.....
     BlockOverwriteFilter: 
@@ -26,6 +21,8 @@ Filters:
         inputs: base chunk, overwrite chunk, air block (air blocks in overwrite chunk won't replace blocks in the base chunk.)
     ProfilerFilter: make it. It profiles the amount of time the filter took to run either .getChunk() or .getChunkHeights(). Might have to be a hack...
     VerificationFilter: make it. It makes sure that the filter output is compliant, then acts as a passthrough.
+    LayeredTerrainLandmark: make it. It takes a list of layermasks and blockID's and creates layered terrain from them.
+    
 
 Operator Overloading:
     Layers should be able to operator overload and return an arithmetic filter of some kind... right? Hmm, not block data.
@@ -39,14 +36,11 @@ LandmarkGenerators:
             Line-drawing API
             Box API
             Sphere-drawing API
-            Anything else we might need!
-    StaticTreeLandmark: 
-        finish the "actual-y" search by pulling from the correct chunk!
-    
+            Anything else we might need!    
 
 Graphs:
     Make them. these are aggregate layers which generate entire map chunks. Basically a layer, but given a fancy name and contains a 
-    fuckton of filters.
+    fuckton of filters. I probably want these in a separate folder.
 
 Diamondsquare:
     diamondsquare3D: make it.
@@ -58,5 +52,7 @@ Testing:
 
 ===========================================
 Ideas:
-    What if I made a normal "layer" the return value between filters? then I can give it ID and DATA buffers. That might be expensive to build a layer for every filter output like that. Maybe a dict with two values, "IDs" and "data"
+    SchematicFilter: load from a pymclevel schematic
+    HugeCaveFilter: cut huge caves with stalactites and stalagmites using height-stretched ellipsoids
+    Some sort of iconic building (probably a SchematicFilter, maybe like the arch from ico/SOTC
 

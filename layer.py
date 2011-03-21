@@ -8,13 +8,12 @@ Generator for map-relevant datasets: layers!
 
 import random
 import math
-# PHASING OUT NUMPY SUPPORT
-#import numpy
+import copy
 
 from diamondsquare import * # generates plasma noise
 from constants import * # stores such cool constants as CHUNK_WIDTH_IN_BLOCKS and MAT_AIR
 
-__all__ = ["Layer", "Filter", "WaterLevelFilter", "TopSoilFilter", "SnowCoverFilter",
+__all__ = ["Layer", "Filter", "WaterLevelFilter", "TopSoilFilter", "SnowCoverFilter", "CacheFilter",
             "LayerMask2d", "MaskFilter2d", "BlendMaskFilter2d", "ThresholdMaskFilter2d", "DSLayerMask2d", 
             "HeightMaskRenderFilter"]
 
@@ -26,31 +25,46 @@ class Chunk(object):
     """
     Implements a single chunk. Contains block ID's, data, entities, etc.
     """
-    x = None
-    z = None
+    cx = None
+    cz = None
     blocks = None
     data = None
     
-    def __init__(self, fillmaterial=MAT_AIR):
-        self.blocks = [[[fillmaterial for vert in xrange(CHUNK_HEIGHT_IN_BLOCKS)] for row in xrange(CHUNK_WIDTH_IN_BLOCKS)] for col in xrange(CHUNK_WIDTH_IN_BLOCKS)]
-        self.data = [[[0 for vert in xrange(CHUNK_HEIGHT_IN_BLOCKS)] for row in xrange(CHUNK_WIDTH_IN_BLOCKS)] for col in xrange(CHUNK_WIDTH_IN_BLOCKS)]
+    def __init__(self, cx, cz, fillmaterial=MAT_AIR):
+        # Passing None to fillmaterial allows us to create an empty chunk, without even block or data arrays. Saves on overhead.
+        if fillmaterial != None:
+            self.blocks = [[[fillmaterial for vert in xrange(CHUNK_HEIGHT_IN_BLOCKS)] for row in xrange(CHUNK_WIDTH_IN_BLOCKS)] for col in xrange(CHUNK_WIDTH_IN_BLOCKS)]
+            self.data = [[[0 for vert in xrange(CHUNK_HEIGHT_IN_BLOCKS)] for row in xrange(CHUNK_WIDTH_IN_BLOCKS)] for col in xrange(CHUNK_WIDTH_IN_BLOCKS)]
+        self.cx = cx
+        self.cz = cz
+
+    def __copy(self):
+        newchunk = Chunk(self.cx, self.cz, fillmaterial = None)
+        newchunk.blocks = copy.deepcopy(self.blocks)
+        newchunk.data = copy.deepcopy(self.data)
+        return newchunk
+        
 
 class Layer(object):
     """
     Implements a layer of minecraft blocks 
     """
     def getChunk(self, cx, cz):
-        return Chunk()
+        return Chunk(cx, cz)
 
 class Filter(Layer):
     """
     Implements a layer which draws chunk block from its input and outputs chunk block data.
 
-    This superclass acts as a passthrough filter for chunk block data.
+    This superclass acts as a passthrough filter for chunk block data. Subclass this and override
+    Filter.getChunk() to create more interesting filters.
+
+    inputlayer must either be a Layer, a subclass of Layer, or None (in which case you will need to
+    set the inputlayer later.)
     """
     inputlayer = None
     def __init__(self, inputlayer):
-        assert ( issubclass(type(inputlayer), Layer ) )
+        assert ( inputlayer == None or issubclass(type(inputlayer), Layer ) )
         self.inputlayer = inputlayer
 
     def getChunk(self, cx, cz):
@@ -58,6 +72,15 @@ class Filter(Layer):
         Sample filter: act as a pass-through filter.
         """
         return self.inputlayer.getChunk(cx, cz)
+
+    def setInputLayer(self, inputlayer):
+        """
+        Set the input layer of a Filter.
+
+        Don't use this too often. You run the risk of creating cyclic pipelines, and causing
+        python to shit a brick.
+        """
+        self.inputlayer = inputlayer
 
 
 class WaterLevelFilter(Filter):
@@ -176,6 +199,32 @@ class SnowCoverFilter(Filter):
                         break
 
         return chunk
+
+class CacheFilter(Filter):
+    """
+    Implements a caching passthru filter.
+
+    If the input chunk has already been requested and cached, we just pull from the cache.
+
+    inputlayer must either be a Layer, a subclass of Layer, or None (in which case you will need to
+    set the inputlayer later.)
+    """
+    cache = None
+    def __init__(self, inputlayer):
+        Filter.__init__(self, inputlayer)
+        self.cache = {}
+
+    def getChunk(self, cx, cz):
+        """
+        Sample filter: act as a pass-through filter.
+        """
+        if not (cx, cz) in self.cache:
+            passchunk = self.inputlayer.getChunk(cx, cz)
+            savechunk = copy.copy(passchunk)
+            self.cache[ (cx,cz) ] = savechunk
+            return passchunk
+        else:
+            return copy.copy(self.cache[ (cx,cz) ] )
 
 #########################################################################
 # LayersMask2d and MaskFilter2d: output chunk heightmap data (a chunk-sized 2d array of values from 0.0 to 1.0)
@@ -460,7 +509,7 @@ class HeightMaskRenderFilter(Layer):
         # 2D array
         heights = self.inputlayer.getChunkHeights( cx,cz )
         # 3D array
-        chunk = Chunk()
+        chunk = Chunk(cx, cz)
         blocks = chunk.blocks
         blockid = self.blockid
         rangetop = self.rangetop

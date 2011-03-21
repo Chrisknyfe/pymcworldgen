@@ -8,6 +8,7 @@ basically mcworldgentest with scipy/pylab stripped out
 
 """
 
+
 # Dependencies
 import random
 import math
@@ -78,8 +79,9 @@ def filtertest():
                             replaceid = MAT_GRASS) # Replace top dirt with grass
         
     tfilter = WaterLevelFilter(tfilter) # water level at 64
-    tfilter = Landmark(worldseed, tfilter, 0, 0) # a single landmark
-    tfilter = LandmarkGenerator(worldseed, tfilter, landmarklist = [StaticTreeLandmark], density = 2500)
+    tfilter = Landmark(tfilter, worldseed, 0, 0) # a single landmark
+    tfilter = CacheFilter(tfilter) # since LandmarkGenerator requests chunks multiple times, this is generally needed.
+    tfilter = LandmarkGenerator(tfilter, worldseed, landmarklist = [StaticTreeLandmark(None)], density = 2500)
 
     tfilter = SnowCoverFilter(tfilter, 
                             rangebottom = 82, 
@@ -106,6 +108,14 @@ def filtertest():
     print "Processing took", totaltime, "seconds."
 
 if __name__ == "__main__":
+   
+    try:
+        import psyco
+        psyco.full()
+    except ImportError:
+        print "Psyco could not be loaded. Install with \'sudo apt-get install python-psyco\' for additional speed boosts."
+        pass
+    
     if not os.path.isdir("renders"):
         os.mkdir("renders")
     filtertest()
