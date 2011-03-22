@@ -161,7 +161,11 @@ class LandmarkGenerator(Filter):
     # { dict where key is (rx, rz) and value is {dict where key is (cx, cz) and value is [list of Landmarks ] } }
     worldspawns = None 
 
-    def __init__(self, inputlayer, seed, landmarklist = [Landmark], density = 200, layermask = None):
+    def __init__(self, inputlayer, seed, landmarklist = [Landmark], density = 200, layermask = None, rangebottom = 0, rangetop = CHUNK_HEIGHT_IN_BLOCKS):
+        # Input landmark list needs to be doublechecked.
+        for lmtype in landmarklist:
+            if not issubclass(type(lmtype), Landmark): raise TypeError, "landmarklist must only contain Landmark objects."
+        # We need to enforce that a cachefilter is placed before the handmark generator, for performance purposes.
         if not issubclass(type(inputlayer), CacheFilter):
             print "LandmarkGenerator works much faster with a cachefilter at its input, since it requests chunks multiple times."
             print "Screw it, I'm adding one because the performance boost is eightfold."
@@ -169,9 +173,9 @@ class LandmarkGenerator(Filter):
         Filter.__init__(self, inputlayer)
         self.seed = seed
         self.density = density
-        # Input landmark list needs to be doublechecked.
-        for lmtype in landmarklist:
-            if not issubclass(type(lmtype), Landmark): raise TypeError, "landmarklist must only contain Landmark objects."
+        self.rangetop = rangetop
+        self.rangebottom = rangebottom
+        self.layermask = layermask
         self.landmarklist = landmarklist
         # This data structure has a lot of indexing structure so we can find relevant points quickly
         self.worldspawns = {} 
@@ -191,13 +195,15 @@ class LandmarkGenerator(Filter):
             random.jumpahead( ((rx & 0xFFFF0000) | (rz & 0x0000FFFF)) ) 
             # First number should be number of points in region
             numspawns = self.density
+            rangetop = self.rangetop
+            rangebottom = self.rangebottom
 
             self.worldspawns[ (rx,rz) ] = {}
             currentregion = self.worldspawns[ (rx,rz) ]
             for ix in xrange(numspawns):
                 blockx = random.randint( 0, CHUNK_WIDTH_IN_BLOCKS * REGION_WIDTH_IN_CHUNKS - 1 ) + rx * CHUNK_WIDTH_IN_BLOCKS * REGION_WIDTH_IN_CHUNKS
                 blockz = random.randint( 0, CHUNK_WIDTH_IN_BLOCKS * REGION_WIDTH_IN_CHUNKS - 1 ) + rz * CHUNK_WIDTH_IN_BLOCKS * REGION_WIDTH_IN_CHUNKS
-                blocky = random.randint( 0, CHUNK_HEIGHT_IN_BLOCKS - 1 ) 
+                blocky = random.randint( max(0, rangebottom), min(CHUNK_HEIGHT_IN_BLOCKS - 1, rangetop) ) 
                 currchunkx = blockx / CHUNK_WIDTH_IN_BLOCKS
                 currchunkz = blockz / CHUNK_WIDTH_IN_BLOCKS
                 # We store the points for each chunk indexed by chunk
@@ -307,8 +313,7 @@ class StaticTreeLandmark(Landmark):
     def editChunk(self, cornerblockx, cornerblockz, terrainchunk):
         """
         Place the tree in this chunk!
-        """        
-        terrainblocks = terrainchunk.blocks
+        """
 
         # Find our actual Y: place us on the ground.
         ground = self.findHighestGround()
@@ -330,27 +335,49 @@ class StaticTreeLandmark(Landmark):
         self.stampToChunk( self.statictree, terrainchunk.blocks, offsetx, offsetz, offsety )
 
 
-class CubicZirVeiniumLandmark(Landmark):
+class CubicOreLandmark(Landmark):
 
     viewrange = None
     sizex = None
     sizez = None
     sizey = None
+    stamp = None
 
-    def __init__(self, terrainlayer, seed = 0, x = 0, z = 0, y = 0, sizex = 2, sizez = 2, sizey = 2):
+    def __init__(self, inputlayer, seed = 0, ore = MAT_DIAMONDORE, x = 0, z = 0, y = 0, sizex = 2, sizez = 2, sizey = 2, density = 0.33):
         
-        Landmark.__init__(self, terrainlayer, seed,  x, z, y)
+        Landmark.__init__(self, inputlayer, seed, x, z, y)
+        self.ore = ore
         self.sizex = sizex
         self.sizez = sizez
         self.sizey = sizey
         self.viewrange = max(sizex, sizez) / 2
+        self.stamp = None
+        self.density = density
 
     def editChunk(self, cornerblockx, cornerblockz, terrainchunk):
         """
-        Edit the input chunk. Override this function to create beautiful procedural
-        Landmarks. 
+        Edit the input chunk and add ores.
         """
-        terrainblocks = terrainchunk.blocks
+        if self.stamp == None:
+            self.stamp = [[[MAT_TRANSPARENT for vert in xrange(self.sizey)] for col in xrange(self.sizez)] for row in xrange(self.sizex)]
+            # Add shit to the stamp here!
+            random.seed( self.seed ^ (( (self.x << 16) & 0xFFFF0000) | ( self.z & 0x0000FFFF)) )
+            random.jumpahead( self.y )
+            for row in self.stamp:
+                for col in row:
+                    for ix in xrange(len(col)) :
+                        if random.random() < self.density:
+                            col[ix] = self.ore
+        offsetx = self.x - cornerblockx
+        offsetz = self.z - cornerblockz
+        offsety = self.y
+        self.stampToChunk( self.stamp, terrainchunk.blocks, offsetx, offsetz, offsety )
+
+    def __copy__(self):
+        newcopy = CubicOreLandmark(self.inputlayer, self.seed, self.ore, self.x, self.z, self.y, self.sizex, self.sizez, self.sizey, self.density)
+        newcopy.stamp = copy.deepcopy(self.stamp)
+        return newcopy
+        
 
 
 

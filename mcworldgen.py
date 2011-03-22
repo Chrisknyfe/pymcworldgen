@@ -61,7 +61,16 @@ def filtertest():
     tfilter = HeightMaskRenderFilter(terrain,
                             blockid = testworld.materials.Stone.ID,
                             rangebottom = 64 - 30 ,
-                            rangetop = 64 + 30) # Render the terrain heightmask to blocks
+                            rangetop = 64 + 30) # Render the terrain heightmask to rock
+    # Bottom should be Adminium/Bedrock
+    tfilter = WaterLevelFilter(tfilter, rangetop = 0, findid = MAT_STONE, replaceid = MAT_BEDROCK)
+    # Add ores
+    tfilter = LandmarkGenerator(tfilter, worldseed + 5, landmarklist = [CubicOreLandmark(None, ore = MAT_COALORE, density = 0.5, sizex = 4, sizez = 4, sizey = 4)], density = 2500 , rangebottom = 1, rangetop = 50)
+    tfilter = LandmarkGenerator(tfilter, worldseed + 6, landmarklist = [CubicOreLandmark(None, ore = MAT_IRONORE, density = 0.5, sizex = 3, sizez = 3, sizey = 3)], density = 6500 , rangebottom = 1, rangetop = 50)
+    tfilter = LandmarkGenerator(tfilter, worldseed + 4, landmarklist = [CubicOreLandmark(None, ore = MAT_GOLDORE, density = 0.5)], density = 2300 , rangebottom = 1, rangetop = 35)
+    tfilter = LandmarkGenerator(tfilter, worldseed + 3, landmarklist = [CubicOreLandmark(None, ore = MAT_LAPISORE, density = 0.5)], density = 1200, rangebottom = 1, rangetop = 32)
+    tfilter = LandmarkGenerator(tfilter, worldseed + 2, landmarklist = [CubicOreLandmark(None, ore = MAT_REDSTONEORE, density = 0.5, sizex = 3, sizez = 3, sizey = 3)], density = 2600, rangebottom = 1, rangetop = 19)
+    tfilter = LandmarkGenerator(tfilter, worldseed + 1, landmarklist = [CubicOreLandmark(None, ore = MAT_DIAMONDORE, density = 0.5)], density = 1400, rangebottom = 1, rangetop = 19)
 
     tfilter = Filter(tfilter) # passthru filter
     tfilter = TopSoilFilter(tfilter, 

@@ -116,7 +116,7 @@ class WaterLevelFilter(Filter):
         replaceid = self.replaceid
         for row in chunk.blocks:
             for col in row:
-                for ix in xrange(self.rangebottom, min( len(col), self.rangetop) ):
+                for ix in xrange(self.rangebottom, min( len(col), self.rangetop + 1) ):
                     if col[ix] == findid:
                         col[ix] = self.replaceid
         return chunk 
@@ -149,7 +149,7 @@ class TopSoilFilter(Filter):
         thickness = self.thickness
         rangetop = self.rangetop
         rangebottom = self.rangebottom
-        workingrange = range(self.rangebottom, self.rangetop)
+        workingrange = range(self.rangebottom, self.rangetop + 1)
         workingrange.reverse()
         for row in chunk.blocks:
             for col in row: # for all vertical columns:
@@ -197,7 +197,7 @@ class SnowCoverFilter(Filter):
         snowid = self.snowid
         rangetop = self.rangetop
         rangebottom = self.rangebottom
-        workingrange = range(rangebottom, rangetop)
+        workingrange = range(rangebottom, rangetop + 1)
         workingrange.reverse()
         for row in chunk.blocks:
             for col in row: # for all vertical columns:

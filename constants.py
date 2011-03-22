@@ -22,6 +22,12 @@ try:
     MAT_BEDROCK = materials.Bedrock.ID
     MAT_LEAVES = materials.Leaves.ID
     MAT_GRASS = materials.Grass.ID
+    MAT_DIAMONDORE = materials.DiamondOre.ID
+    MAT_REDSTONEORE = materials.RedstoneOre.ID
+    MAT_LAPISORE = materials.LapisLazuliOre.ID
+    MAT_GOLDORE = materials.GoldOre.ID
+    MAT_IRONORE = materials.IronOre.ID
+    MAT_COALORE = materials.CoalOre.ID
 except ImportError:
     MAT_AIR = 0
     MAT_STONE = 1
@@ -32,6 +38,12 @@ except ImportError:
     MAT_BEDROCK = 7
     MAT_LEAVES = 18
     MAT_GRASS = 2
+    MAT_DIAMONDORE = 56
+    MAT_REDSTONEORE = 73
+    MAT_LAPISORE = 21
+    MAT_GOLDORE = 14
+    MAT_IRONORE = 15
+    MAT_COALORE = 16
 MAT_TRANSPARENT = -1
 
 # LayerMask height constants
