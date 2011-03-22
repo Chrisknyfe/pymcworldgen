@@ -38,10 +38,22 @@ class Chunk(object):
         self.cx = cx
         self.cz = cz
 
-    def __copy(self):
-        newchunk = Chunk(self.cx, self.cz, fillmaterial = None)
-        newchunk.blocks = copy.deepcopy(self.blocks)
-        newchunk.data = copy.deepcopy(self.data)
+    # TODO: for some reason, this causes a segmentation fault.
+    #def __copy__(self):
+        #newchunk = copy.copy(self)
+        #newchunk.blocks = copy.deepcopy(self.blocks)
+        #newchunk.data = copy.deepcopy(self.data)
+        #return newchunk
+    def copy(self):
+        newchunk = copy.copy(self)
+        #newchunk.blocks = copy.deepcopy(self.blocks)
+       
+        xlen = len(self.blocks)
+        zlen = len(self.blocks[0])
+        ylen = len(self.blocks[0][0])
+        newchunk.blocks = [[ list(self.blocks[x][z]) for z in xrange( zlen )] for x in xrange( xlen )] 
+        
+        #newchunk.data = copy.deepcopy(self.data)
         return newchunk
         
 
@@ -220,11 +232,13 @@ class CacheFilter(Filter):
         """
         if not (cx, cz) in self.cache:
             passchunk = self.inputlayer.getChunk(cx, cz)
-            savechunk = copy.copy(passchunk)
+            #savechunk = copy.copy(passchunk)
+            savechunk = passchunk.copy()
             self.cache[ (cx,cz) ] = savechunk
             return passchunk
         else:
-            return copy.copy(self.cache[ (cx,cz) ] )
+            #return copy.copy(self.cache[ (cx,cz) ] )
+            return self.cache[ (cx,cz) ].copy()
 
 #########################################################################
 # LayersMask2d and MaskFilter2d: output chunk heightmap data (a chunk-sized 2d array of values from 0.0 to 1.0)

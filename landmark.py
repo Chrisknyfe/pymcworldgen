@@ -31,8 +31,8 @@ class Landmark(Filter):
     z = None
     y = None
     
-    # Viewrange is now an instance property. This should be set in the constructor, before being used by a LandmarkGenerator.
-    viewrange = None
+    # Viewrange is generally a property of a class, but an instance may choose to modify it.
+    viewrange = 0
     # Set to TRUE if you want to cancel generation of this landmark.
     drawcancelled = None
 
@@ -49,7 +49,6 @@ class Landmark(Filter):
         self.z = z
         self.y = y
         self.drawcancelled = False
-        self.viewrange = 1
 
     def setPos(self, x, z, y):
         """
