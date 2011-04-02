@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-rm *.pyc
+find . -iname '*.pyc' -print0 | xargs -0 rm
 rm c10t.log
