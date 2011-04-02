@@ -21,7 +21,7 @@ Filters:
         inputs: base chunk, overwrite chunk, air block (air blocks in overwrite chunk won't replace blocks in the base chunk.)
     ProfilerFilter: make it. It profiles the amount of time the filter took to run either .getChunk() or .getChunkHeights(). Might have to be a hack...
     VerificationFilter: make it. It makes sure that the filter output is compliant, then acts as a passthrough.
-    LayeredTerrainLandmark: make it. It takes a list of layermasks and blockID's and creates layered terrain from them.
+    LayeredTerrainFilter: make it. It takes a list of layermasks and blockID's and creates layered terrain from them.
     
 
 Operator Overloading:
@@ -36,7 +36,9 @@ LandmarkGenerators:
             Line-drawing API
             Box API
             Sphere-drawing API
-            Anything else we might need!    
+            Anything else we might need! 
+    LinearCaveLandmark: make it. It makes caves using a line drawing algorithm.
+    OvularCaveLandmark: make it. It makes caves by drawing ovals of air.   
 
 Graphs:
     Make them. these are aggregate layers which generate entire map chunks. Basically a layer, but given a fancy name and contains a 
@@ -53,6 +55,5 @@ Testing:
 ===========================================
 Ideas:
     SchematicFilter: load from a pymclevel schematic
-    HugeCaveFilter: cut huge caves with stalactites and stalagmites using height-stretched ellipsoids
     Some sort of iconic building (probably a SchematicFilter, maybe like the arch from ico/SOTC
 
