@@ -5,12 +5,11 @@
 Run all unit tests for pyMCWorldGen
 
 """
+import unittest
+import testing
 
-import os
+subtesting = dir(testing)
+print subtesting
 
-
-print os.getcwd()
-
-execfile( os.path.join( os.getcwd(), "test/unittests_old.py") )
-execfile( os.path.join( os.getcwd(), "test/test_diamondsquare.py") )
-
+suite = unittest.TestLoader().loadTestsFromModule(testing)
+unittest.TextTestRunner(verbosity=2).run(suite)
