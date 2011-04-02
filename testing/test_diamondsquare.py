@@ -9,6 +9,7 @@ Unit testing for diamondsquare module
 import unittest
 
 # Dependencies
+import os
 import random
 import numpy
 from saveutils import saveedgeimage, savechunkimage
