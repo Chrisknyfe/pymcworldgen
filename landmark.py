@@ -65,8 +65,8 @@ class Landmark(Filter):
         """
         Determine whether the given chunk contains a portion of this landmark.
         """
-        bxrange = (cx*16 - self.viewrange, (cx+1)*CHUNK_WIDTH_IN_BLOCKS + self.viewrange)
-        bzrange = (cz*16 - self.viewrange, (cz+1)*CHUNK_WIDTH_IN_BLOCKS + self.viewrange)
+        bxrange = (cx*CHUNK_WIDTH_IN_BLOCKS - self.viewrange, (cx+1)*CHUNK_WIDTH_IN_BLOCKS + self.viewrange)
+        bzrange = (cz*CHUNK_WIDTH_IN_BLOCKS - self.viewrange, (cz+1)*CHUNK_WIDTH_IN_BLOCKS + self.viewrange)
 
         if ( bxrange[0] <= self.x < bxrange[1] ) and ( bzrange[0] <= self.z < bzrange[1] ):
             return True
@@ -80,7 +80,7 @@ class Landmark(Filter):
         originchunkz = self.z / CHUNK_WIDTH_IN_BLOCKS
         originchunk = self.inputlayer.getChunk(originchunkx, originchunkz).blocks
         # now that we have the correct origin chunk, let's search for the tree's ground height.
-        downrange = range( 0, 127 )
+        downrange = range( 0, CHUNK_HEIGHT_IN_BLOCKS - 1 )
         downrange.reverse()
         actualy = None
         actualyid = None

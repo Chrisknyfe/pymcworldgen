@@ -2,7 +2,7 @@
 
 """
 
-Unit testing for chunk class
+Go ahead. Break a subclass. I dare you.
 
 """
 
@@ -39,7 +39,7 @@ def validate_chunk_fields(chunk):
 
 class ChunkTestCase(unittest.TestCase):
     """
-    Chunk is a class that contains a single chunk of minecraft map data.
+    Chunk is a class that contains a single chunk of minecraft map data. Acts as a transport class between layers and filters
     - it should contain a square, chunk-sized array of blocks and data.
     - it should have valid integer values for cx and cz. 
     - When copied, none of its fields should affect the fields of the original chunk.
@@ -48,6 +48,12 @@ class ChunkTestCase(unittest.TestCase):
     def setUp(self):
         random.seed()
         self.testobject = Chunk(random.randint(-sys.maxint-1, sys.maxint - 1),random.randint(-sys.maxint -1, sys.maxint - 1))
+        try:
+            chunk = Chunk( "1", None )
+        except Exception as e:
+            pass
+        else:
+            self.fail("chunk constructor should fail on bad input ")
         
     
     def test_valid_fields(self):
@@ -68,14 +74,6 @@ class ChunkTestCase(unittest.TestCase):
                 for heightix in xrange(CHUNK_HEIGHT_IN_BLOCKS):
                     self.assertNotEqual(chunkcopy.blocks[rowix][colix][heightix], self.testobject.blocks[rowix][colix][heightix])
                     self.assertNotEqual(chunkcopy.data[rowix][colix][heightix], self.testobject.data[rowix][colix][heightix])
-        
-    def test_bad_inputs(self):
-        try:
-            chunk = Chunk( "1", None )
-        except Exception as e:
-            pass
-        else:
-            self.fail("chunk constructor should fail on bad input ")
         
 class LayerTestCase(unittest.TestCase):
     """
@@ -98,13 +96,12 @@ class LayerTestCase(unittest.TestCase):
         self.assertEquals(type(chunk), Chunk)
         validate_chunk_fields(chunk)
         
-    def test_bad_inputs(self):
         try:
-            self.testobject.getChunk(True, "4")
+            self.testobject.getChunk(None, False)
         except Exception as e:
             pass
         else:
-            self.fail("layer getChunk should fail on bad input ")
+            self.fail("filter getChunk should fail on bad input ")
             
 class FilterTestCase(LayerTestCase):
     """
@@ -130,21 +127,15 @@ class FilterTestCase(LayerTestCase):
         self.testobject.setInputLayer(newlayer)
         self.assertEqual(newlayer, self.testobject.inputlayer)
         
-    def test_bad_inputs(self): 
-        
-        try:
-            self.testobject.getChunk(None, False)
-        except Exception as e:
-            pass
-        else:
-            self.fail("filter getChunk should fail on bad input ")
-            
         try:
             self.testobject.setInputLayer("not a layer or subclass thereof")
         except Exception as e:
             pass
         else:
             self.fail("filter should not accept anything except a layer in its constructor.")
+        
+        
+            
               
         
         
