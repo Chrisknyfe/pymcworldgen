@@ -23,14 +23,7 @@ class LandmarkTestCase(test_baseclasses.FilterTestCase):
     - 
     """
     def setUp(self):
-        layer = Layer()
-        self.testobject = Landmark(layer)
-        try:
-            ft = Landmark(None)
-        except Exception as e:
-            pass
-        else:
-            self.fail("Landmark should not accept anything except a layer in its constructor.")
+        self.testobject = self.construct(Landmark)
             
     def test_setPos(self):
         rx = self.testobject.x + 5

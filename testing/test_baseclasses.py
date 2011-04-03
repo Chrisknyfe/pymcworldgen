@@ -87,7 +87,17 @@ class LayerTestCase(unittest.TestCase):
     testobject = None # this gets set in setUp, and tested in the subsequent tests. This allows subclassing of the tested object!
     
     def setUp(self):
-        self.testobject = Layer()
+        self.testobject = self.construct(Layer)
+        
+    def construct(self, thisclass):
+        """
+        self.construct: the solution to re-testing the superclasses' constructor. Usually we test the class's constructor in setUp,
+        but this way we leave a nice hook to override setUp as needed, and to allow the subclass to call the constructor using 
+        the superclass's test.
+        
+        Don't call the superclass's construct() method if you're changing the rules for constructing.
+        """
+        return thisclass()
     
     def test_getchunk(self):
         self.testobject = Layer()
@@ -108,18 +118,23 @@ class FilterTestCase(LayerTestCase):
     Filter: Implements a filter for layers of minecraft blocks.
     - Should only be constructable by passing a layer in. 
     """
-    
-    testobject = None # this gets set in setUp, and tested in the subsequent tests. This allows subclassing of the tested object!
+
     def setUp(self):
+        self.testobject = self.construct(Filter)
+    
+    def construct(self, thisclass):
         layer = Layer()
-        self.testobject = Filter(layer)
-        
+        # None is also supported as an inputlayer for filters, but getChunk will fail.
+        ft = thisclass(None)        
         try:
-            ft = Filter(None)
+            ft = thisclass(False)
         except Exception as e:
             pass
         else:
             self.fail("filter should not accept anything except a layer in its constructor.")
+            
+        return thisclass(layer)
+        
     
     def test_setinputlayer(self):
         newlayer = Layer()

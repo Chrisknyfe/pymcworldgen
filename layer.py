@@ -74,7 +74,7 @@ class Filter(Layer):
     """
     inputlayer = None
     def __init__(self, inputlayer):
-        if inputlayer == None or not issubclass(type(inputlayer), Layer ): raise RuntimeError, "input to filter must be a layer type (or subclass thereof)"
+        if inputlayer != None and not issubclass(type(inputlayer), Layer ): raise RuntimeError, "input to filter must be a layer type (or subclass thereof) or none"
         self.inputlayer = inputlayer
 
     def getChunk(self, cx, cz):

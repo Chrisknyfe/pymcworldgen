@@ -167,8 +167,8 @@ class LandmarkGenerator(Filter):
             if not issubclass(type(lmtype), Landmark): raise TypeError, "landmarklist must only contain Landmark objects."
         # We need to enforce that a cachefilter is placed before the handmark generator, for performance purposes.
         if not issubclass(type(inputlayer), CacheFilter):
-            print "LandmarkGenerator works much faster with a cachefilter at its input, since it requests chunks multiple times."
-            print "Screw it, I'm adding one because the performance boost is eightfold."
+            #print "LandmarkGenerator works much faster with a cachefilter at its input, since it requests chunks multiple times."
+            #print "Screw it, I'm adding one because the performance boost is eightfold."
             inputlayer = CacheFilter(inputlayer)
         Filter.__init__(self, inputlayer)
         self.seed = seed
