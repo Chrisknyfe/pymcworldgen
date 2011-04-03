@@ -31,6 +31,7 @@ class Chunk(object):
     data = None
     
     def __init__(self, cx, cz, fillmaterial=MAT_AIR):
+        if type(cx) != int or type(cz) != int: raise RuntimeError, "chunk coordinates must be of type int"
         # Passing None to fillmaterial allows us to create an empty chunk, without even block or data arrays. Saves on overhead.
         if fillmaterial != None:
             self.blocks = [[[fillmaterial for vert in xrange(CHUNK_HEIGHT_IN_BLOCKS)] for row in xrange(CHUNK_WIDTH_IN_BLOCKS)] for col in xrange(CHUNK_WIDTH_IN_BLOCKS)]
@@ -44,18 +45,15 @@ class Chunk(object):
         #newchunk.blocks = copy.deepcopy(self.blocks)
         #newchunk.data = copy.deepcopy(self.data)
         #return newchunk
+
     def copy(self):
         newchunk = copy.copy(self)
-        #newchunk.blocks = copy.deepcopy(self.blocks)
-       
         xlen = len(self.blocks)
         zlen = len(self.blocks[0])
         ylen = len(self.blocks[0][0])
         newchunk.blocks = [[ list(self.blocks[x][z]) for z in xrange( zlen )] for x in xrange( xlen )] 
-        
-        #newchunk.data = copy.deepcopy(self.data)
+        newchunk.data = [[ list(self.data[x][z]) for z in xrange( zlen )] for x in xrange( xlen )] 
         return newchunk
-        
 
 class Layer(object):
     """
@@ -76,7 +74,7 @@ class Filter(Layer):
     """
     inputlayer = None
     def __init__(self, inputlayer):
-        assert ( inputlayer == None or issubclass(type(inputlayer), Layer ) )
+        if inputlayer == None or not issubclass(type(inputlayer), Layer ): raise RuntimeError, "input to filter must be a layer type (or subclass thereof)"
         self.inputlayer = inputlayer
 
     def getChunk(self, cx, cz):
@@ -92,6 +90,7 @@ class Filter(Layer):
         Don't use this too often. You run the risk of creating cyclic pipelines, and causing
         python to shit a brick.
         """
+        if inputlayer == None or not issubclass(type(inputlayer), Layer ): raise RuntimeError, "input to filter must be a layer type (or subclass thereof)"
         self.inputlayer = inputlayer
 
 

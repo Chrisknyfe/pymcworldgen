@@ -254,6 +254,3 @@ class DiamondSquare1dTestCase(unittest.TestCase):
         else:
             self.fail("diamondsquare1D should fail on bad initdepth input ")
 
-if __name__ == '__main__':
-    unittest.main()
-
