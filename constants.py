@@ -13,21 +13,21 @@ REGION_WIDTH_IN_CHUNKS = 32
 # Block ID constants
 try:
     from pymclevel import materials
-    MAT_AIR = materials.Air.ID
-    MAT_STONE = materials.Stone.ID
-    MAT_DIRT = materials.Dirt.ID
-    MAT_WOOD = materials.Wood.ID
-    MAT_WATER = materials.WaterActive.ID
-    MAT_SNOW = materials.Snow.ID
-    MAT_BEDROCK = materials.Bedrock.ID
-    MAT_LEAVES = materials.Leaves.ID
-    MAT_GRASS = materials.Grass.ID
-    MAT_DIAMONDORE = materials.DiamondOre.ID
-    MAT_REDSTONEORE = materials.RedstoneOre.ID
-    MAT_LAPISORE = materials.LapisLazuliOre.ID
-    MAT_GOLDORE = materials.GoldOre.ID
-    MAT_IRONORE = materials.IronOre.ID
-    MAT_COALORE = materials.CoalOre.ID
+    MAT_AIR = materials.materials.Air.ID
+    MAT_STONE = materials.materials.Stone.ID
+    MAT_DIRT = materials.materials.Dirt.ID
+    MAT_WOOD = materials.materials.Wood.ID
+    MAT_WATER = materials.materials.WaterActive.ID
+    MAT_SNOW = materials.materials.Snow.ID
+    MAT_BEDROCK = materials.materials.Bedrock.ID
+    MAT_LEAVES = materials.materials.Leaves.ID
+    MAT_GRASS = materials.materials.Grass.ID
+    MAT_DIAMONDORE = materials.materials.DiamondOre.ID
+    MAT_REDSTONEORE = materials.materials.RedstoneOre.ID
+    MAT_LAPISORE = materials.materials.LapisLazuliOre.ID
+    MAT_GOLDORE = materials.materials.GoldOre.ID
+    MAT_IRONORE = materials.materials.IronOre.ID
+    MAT_COALORE = materials.materials.CoalOre.ID
 except ImportError:
     MAT_AIR = 0
     MAT_STONE = 1
